@@ -108,7 +108,7 @@ test_set = np.reshape(test_set, (len(test_set), 1))
 #scale datasets
 scaler = MinMaxScaler()
 training_set = scaler.fit_transform(training_set)
-test_set = scaler.transform(test_set)
+test_set = scaler.fit_transform(test_set)
 
 # create datasets which are suitable for time series forecasting
 look_back = 1
@@ -217,7 +217,7 @@ def get_split(working_data, n_train, n_test, look_back = 1):
     # scale datasets
     scaler_cv = MinMaxScaler()
     training_set = scaler_cv.fit_transform(training_set)
-    test_set = scaler_cv.transform(test_set)
+    test_set = scaler_cv.fit_transform(test_set)
 
     # create datasets which are suitable for time series forecasting
     X_train, Y_train = create_lookback(training_set, look_back)
@@ -266,7 +266,7 @@ def workflow(working_data, get_split, train_model, get_rmse, n_train = 250, n_te
     RMSE, predictions = get_rmse(model, X_test, Y_test, scaler, start_point, working_data, n_train)
     return RMSE, predictions
 
-RMSE, predictions = workflow(working_data, get_split, train_model, get_rmse, n_train = 600,n_test = 60)
+RMSE, predictions = workflow(working_data, get_split, train_model, get_rmse, n_train = 600, n_test = 60)
 print('Test GRU model RMSE: %.3f' % RMSE)
 
 # This function is used to repeat the workflow ten times and to calculate average RMSE
@@ -305,3 +305,14 @@ def symmetric_mean_absolute_percentage_error(y_true, y_pred, epsilon = 1e-8):
 SMAPE = symmetric_mean_absolute_percentage_error(Y_test2_inverse, predictions_new)
 
 print('Test SMAPE (percentage): %.3f' % SMAPE)
+
+# get final model
+
+n_train = 600
+n_test = 60
+
+X_train, Y_train, X_test, Y_test, scaler, start_point = get_split(working_data, n_train, n_test)
+model = train_model(X_train, Y_train, X_test, Y_test)
+RMSE, predictions = get_rmse(model, X_test, Y_test, scaler, start_point, working_data, n_train)
+
+model.save('NN.keras')
