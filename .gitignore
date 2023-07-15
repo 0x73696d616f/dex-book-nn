@@ -1,1 +1,7 @@
 bitcoin_price.csv
+.env
+**/cache
+test.yml
+**/out
+**/model_chunks
+**/broadcast

@@ -19,6 +19,7 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 import plotly.offline as py
 import plotly.graph_objs as go
+from tensorflow.keras.models import model_from_json
 
 data = pd.read_csv('bitcoin_price.csv')
 data.isnull().values.any()
@@ -233,7 +234,7 @@ def get_split(working_data, n_train, n_test, look_back = 1):
 def train_model(X_train, Y_train, X_test, Y_test):
     # initialize sequential model, add bidirectional LSTM layer and densely connected output neuron
     model = Sequential()
-    model.add(GRU(256, input_shape=(X_train.shape[1], X_train.shape[2])))
+    model.add(GRU(128, input_shape=(X_train.shape[1], X_train.shape[2])))
     model.add(Dense(1))
     
     # compile and fit the model
@@ -315,4 +316,55 @@ X_train, Y_train, X_test, Y_test, scaler, start_point = get_split(working_data, 
 model = train_model(X_train, Y_train, X_test, Y_test)
 RMSE, predictions = get_rmse(model, X_test, Y_test, scaler, start_point, working_data, n_train)
 
-model.save('NN.keras')
+import numpy as np
+import json
+import os
+
+# Convert the model architecture to JSON
+model_json = model.to_json()
+
+# Get the model weights and convert them to a list
+weights_list = [weight.tolist() for weight in model.get_weights()]
+
+# Create a dictionary to store the model architecture and weights
+model_data = {"model": model_json, "weights": weights_list}
+
+# Define the maximum file size in bytes (130 KB)
+max_file_size = 10000
+
+# Calculate the number of chunks required
+total_chunks = int(np.ceil(len(json.dumps(model_data).encode('utf-8')) / max_file_size))
+
+# Create a directory to store the model data chunks
+os.makedirs('model_chunks', exist_ok=True)
+
+# Split the model data into chunks
+for i in range(total_chunks):
+    # Calculate the start and end indices for each chunk
+    start_index = i * max_file_size
+    end_index = (i + 1) * max_file_size
+
+    # Get the chunk data
+    chunk_data = json.dumps(model_data).encode('utf-8')[start_index:end_index]
+
+    # Write the chunk data to a file
+    with open(f'model_chunks/model_data_{i}.json', 'wb') as file:
+        file.write(chunk_data)
+
+# Load the model architecture and weights from the file chunks
+loaded_model_data = bytearray()
+for i in range(total_chunks):
+    # Read the chunk data from the file
+    with open(f'model_chunks/model_data_{i}.json', 'rb') as file:
+        chunk_data = file.read()
+        loaded_model_data.extend(chunk_data)
+
+# Append the chunk data to the loaded model data dictionary
+loaded_model_data = json.loads(loaded_model_data.decode('utf-8'))
+
+# Create a new model from the loaded architecture
+model_loaded = model_from_json(loaded_model_data['model'])
+
+# Set the loaded weights to the model
+loaded_weights = [np.array(weight) for weight in loaded_model_data['weights']]
+model_loaded.set_weights(loaded_weights)
