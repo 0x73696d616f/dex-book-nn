@@ -127,9 +127,9 @@ print('Test GRU model RMSE: %.3f' % RMSE)
 
 predictions_new = predictions
 
-trace1 = go.Scatter(x=Test_Dates, y=Y_test2_inverse, name= 'Actual Price', 
+trace1 = go.Scatter(x=Test_Dates[:-1], y=Y_test2_inverse[:-1], name= 'Actual Price', 
                    line = dict(color = ('rgb(66, 244, 155)'),width = 2))
-trace2 = go.Scatter(x=Test_Dates, y=predictions_new, name= 'Predicted Price',
+trace2 = go.Scatter(x=Test_Dates[:-1], y=predictions_new[1:], name= 'Predicted Price',
                    line = dict(color = ('rgb(244, 146, 65)'),width = 2))
 data = [trace1, trace2]
 layout = dict(title = 'Comparison of true prices (on the test dataset) with prices our model predicted, by dates',
