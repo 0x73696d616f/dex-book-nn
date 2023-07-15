@@ -24,7 +24,11 @@ contract NN {
         }
     }
 
-    function getNNChunk(uint256 index_) external view returns(bytes memory){
-        return SSTORE2.read(nnData[index_]);
+    function getNNChunk(uint256 index_) external view returns(string memory){
+        return string(SSTORE2.read(nnData[index_]));
+    }
+
+    function getNumberOfChunks() external view returns(uint256) {
+        return nnData.length;
     }
 }

@@ -3,11 +3,8 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
-from scipy import stats
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-from random import randint
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import GRU
@@ -18,7 +15,6 @@ from tensorflow.keras.models import model_from_json
 from sklearn.preprocessing import MinMaxScaler
 import json
 import os
-from datetime import date
 from sklearn.model_selection import train_test_split
 
 
@@ -32,16 +28,16 @@ def create_lookback(dataset, look_back=1):
 
 
 # This function takes datasets from the previous function as input and train model using these datasets
-def train_model(X_train, Y_train, X_test, Y_test):
+def train_model(X_train, Y_train, X_val, Y_val):
     # initialize sequential model, add bidirectional LSTM layer and densely connected output neuron
     model = Sequential()
-    model.add(GRU(128, input_shape=(X_train.shape[1], X_train.shape[2])))
+    model.add(GRU(10, input_shape=(X_train.shape[1], X_train.shape[2]), reset_after=False))
     model.add(Dense(1))
     
     # compile and fit the model
     model.compile(loss='mean_squared_error', optimizer='adam')
     model.fit(X_train, Y_train, epochs = 100, batch_size = 16, shuffle = False, 
-                    validation_data=(X_test, Y_test), verbose=0,
+                    validation_data=(X_val, Y_val), verbose=0,
                     callbacks = [EarlyStopping(monitor='val_loss',min_delta=5e-5,patience=20,verbose=0)])
     return model
 
@@ -127,7 +123,7 @@ data = [trace1, trace2]
 layout = dict(title = 'Comparison of true prices (on the test dataset) with prices our model predicted, by dates',
              xaxis = dict(title = 'Date'), yaxis = dict(title = 'Price, USD'))
 fig = dict(data=data, layout=layout)
-py.plot(fig, filename='results_demonstrating2')
+py.plot(fig, filename='results')
 
 # Convert the model architecture to JSON
 model_json = model.to_json()
@@ -138,8 +134,8 @@ weights_list = [weight.tolist() for weight in model.get_weights()]
 # Create a dictionary to store the model architecture and weights
 model_data = {"model": model_json, "weights": weights_list}
 
-# Define the maximum file size in bytes (130 KB)
-max_file_size = 10000
+# Define the maximum file size
+max_file_size = 11000
 
 # Calculate the number of chunks required
 total_chunks = int(np.ceil(len(json.dumps(model_data).encode('utf-8')) / max_file_size))

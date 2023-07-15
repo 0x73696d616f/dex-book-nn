@@ -11,20 +11,20 @@ contract Deploy is Script, Test {
     function setUp() public {}
 
     function run() public {
-        _verify(0x83824A5Ee60E54c649432b63eb815669eBF25318);
-
-        /*vm.startBroadcast();
+        vm.startBroadcast();
         NN nn_ = new NN();
-        for (uint256 i_; i_ < 111; i_++) {
+        console.log("nn address: ", address(nn_));
+        for (uint256 i_; i_ < 1; i_++) {
             nn_.uploadNN(bytes(vm.readFile(string(abi.encodePacked("model_chunks/model_data_", vm.toString(i_), ".json")))));
         }        
-        vm.stopBroadcast();*/
+        vm.stopBroadcast();
+        _verify(address(nn_));
     }
 
     function _verify(address nn_) internal {
-        for (uint256 i_; i_ < 111; i_++) {
+        for (uint256 i_; i_ < 1; i_++) {
             string memory chunk_ = string(abi.encodePacked("model_chunks/model_data_", vm.toString(i_), ".json"));
-            assertEq(vm.readFile(chunk_),  string(NN(nn_).getNNChunk(i_)));
+            assertEq(vm.readFile(chunk_),  NN(nn_).getNNChunk(i_));
         }
     }
 }
