@@ -155,21 +155,3 @@ for i in range(total_chunks):
     # Write the chunk data to a file
     with open(f'model_chunks/model_data_{i}.json', 'wb') as file:
         file.write(chunk_data)
-
-# Load the model architecture and weights from the file chunks
-loaded_model_data = bytearray()
-for i in range(total_chunks):
-    # Read the chunk data from the file
-    with open(f'model_chunks/model_data_{i}.json', 'rb') as file:
-        chunk_data = file.read()
-        loaded_model_data.extend(chunk_data)
-
-# Append the chunk data to the loaded model data dictionary
-loaded_model_data = json.loads(loaded_model_data.decode('utf-8'))
-
-# Create a new model from the loaded architecture
-model_loaded = model_from_json(loaded_model_data['model'])
-
-# Set the loaded weights to the model
-loaded_weights = [np.array(weight) for weight in loaded_model_data['weights']]
-model_loaded.set_weights(loaded_weights)
